@@ -32,7 +32,7 @@ function Profiles() {
           aria-expanded={open ? 'true' : undefined}
         >
           <Avatar
-            sx={{ width: 30, height: 30 }}
+            sx={{ width: 34, height: 34 }}
             alt='Alisa Kujou'
             src='https://i.pinimg.com/736x/a1/66/5f/a1665fa365cc0b699cff539eff7c6ae5.jpg'
           />
