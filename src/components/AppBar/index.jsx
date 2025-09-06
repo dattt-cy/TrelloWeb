@@ -51,7 +51,7 @@ function AppBar() {
         <Recent />
         <Starred />
         <Templates />
-        <Button variant='outlined'>CREATE</Button>
+        <Button variant='outlined'>Create</Button>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <TextField
@@ -63,11 +63,11 @@ function AppBar() {
         <ModelSelect />
         <Tooltip title='Notification'>
           <Badge color='secondary' variant='dot' sx={{ cursor: 'pointer' }}>
-            <NotificationsNoneIcon />
+            <NotificationsNoneIcon sx={{ color: 'primary.main' }} />
           </Badge>
         </Tooltip>
         <Tooltip title='Help'>
-          <HelpOutlineIcon sx={{ cursor: 'pointer' }} />
+          <HelpOutlineIcon sx={{ cursor: 'pointer', color: 'primary.main' }} />
         </Tooltip>
         <Profiles />
       </Box>
