@@ -35,6 +35,24 @@ function Card({ card }) {
       !!card?.attachments?.length
     )
   }
+  // Placeholder card: vẫn cần render để dnd-kit có container đo vị trí, nhưng ẩn hoàn toàn khỏi layout visual
+  if (card?.FE_PlaceholderCard) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={{
+          height: 8,
+          opacity: 0,
+          pointerEvents: 'none',
+          transform: CSS.Translate.toString(transform),
+          transition
+        }}
+        {...attributes}
+        {...listeners}
+      />
+    )
+  }
+
   return (
     <MuiCard
       ref={setNodeRef}

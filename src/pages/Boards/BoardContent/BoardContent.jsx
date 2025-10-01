@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box'
 import ListColumns from './ListColumns/ListColumns'
 import { mapOrder } from '~/utils/sorts'
-import { cloneDeep } from 'lodash'
+import { cloneDeep, isEmpty } from 'lodash'
 import {
   DndContext,
   useSensor,
@@ -10,12 +10,17 @@ import {
   TouchSensor,
   DragOverlay,
   defaultDropAnimationSideEffects,
-  closestCorners
+  closestCorners,
+  pointerWithin,
+  rectIntersection,
+  getFirstCollision
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Column from './ListColumns/Column/Column'
 import Card from './ListColumns/Column/ListCards/Card/Card'
+import { useRef } from 'react'
+import { generatePlaceholderCard } from '~/utils/formatters'
 
 const ACTIVE_DRAG_ITEM_TYPE = {
   COLUMN: 'ACTIVE_DRAG_ITEM_TYPE_COLUMN',
@@ -43,9 +48,11 @@ function BoardContent({ board }) {
   const [activeDragItemId, setActiveDragItemId] = useState(null)
   const [activeDragItemType, setActiveDragItemType] = useState(null)
   const [activeDragItemData, setActiveDragItemData] = useState(null)
+
   const [oldColumnWhenDraggingCard, setOldColumnWhenDraggingCard] =
     useState(null)
-
+  // DIem va cham cuoi cung truoc do ( xu li thuat toan phat hien va cham )
+  const lastOverId = useRef(null)
   useEffect(() => {
     setOrderedColumns(mapOrder(board?.columns, board?.columnOrderIds, '_id'))
   }, [board])
@@ -93,6 +100,10 @@ function BoardContent({ board }) {
         nextActiveColumn.cards = nextActiveColumn.cards.filter(
           (card) => card._id !== activeDraggingCardId
         )
+        // Them placeholder Cảd neu Column rong: Bi keo het cảd di, ko con cai nao nua
+        if (isEmpty(nextActiveColumn.cards)) {
+          nextActiveColumn.cards = [generatePlaceholderCard(nextActiveColumn)]
+        }
         // Cap nhat lai mang cardOrderIs cho chuan du lieu
         nextActiveColumn.cardOrderIds = nextActiveColumn.cards.map(
           (card) => card._id
@@ -110,6 +121,9 @@ function BoardContent({ board }) {
           ...activeDraggingCardData,
           columnId: nextOverColumn._id
         })
+        //Xoa cai PlaceholderCard di neu no dang ton tai
+        nextOverColumn.cards = nextOverColumn.cards.filter(card => !card.FE_PlaceholderCard)
+
         // Cap nhat lai mang cardOrderIs cho chuan du lieu
         nextOverColumn.cardOrderIds = nextActiveColumn.cards.map(
           (card) => card._id
@@ -262,12 +276,48 @@ function BoardContent({ board }) {
     // Giảm duration để animation mượt hơn
     duration: 150
   }
+  // argument: cac doi so tham so
+  const collisionDetectionStrategy = useCallback(
+    (args) => {
+      // Nếu kéo column thì dùng closestCorners
+      if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) {
+        return closestCorners({ ...args })
+      }
+
+      // Tìm các va chạm với con trỏ
+      const pointerIntersections = pointerWithin(args)
+      const intersections = pointerIntersections?.length
+        ? pointerIntersections
+        : rectIntersection(args)
+
+      let overId = getFirstCollision(intersections, 'id')
+
+      // Nếu overId là columnId, chỉ trả về columnId, KHÔNG dùng closestCenter nữa
+      if (overId) {
+        const checkColumn = orderedColumns.find(
+          (column) => column._id === overId
+        )
+        if (checkColumn) {
+          // Nếu pointer đang ở giữa column (không trên card nào), chỉ trả về columnId
+          lastOverId.current = overId
+          return [{ id: overId }]
+        }
+        // Nếu overId là cardId thì trả về cardId
+        lastOverId.current = overId
+        return [{ id: overId }]
+      }
+      // Nếu không có va chạm, trả về lastOverId nếu có
+      return lastOverId.current ? [{ id: lastOverId.current }] : []
+    },
+    [activeDragItemType, orderedColumns]
+  )
 
   return (
     <DndContext
       onDragEnd={handleDragEnd}
-      //Thuat toan phat hien va cham (neu khong co no thi cảd voi corner lon se ko keo qua column duoc)
-      collisionDetection={closestCorners}
+      //Thuat toan phat hien va cham (neu khong co no thi card voi corner lon se ko keo qua column duoc)
+      // Update neu chi dung closestCorner se bi bug giat 2 column
+      collisionDetection={collisionDetectionStrategy}
       onDragOver={handleDragOver}
       onDragStart={handleDragStart}
       sensors={sensors}
