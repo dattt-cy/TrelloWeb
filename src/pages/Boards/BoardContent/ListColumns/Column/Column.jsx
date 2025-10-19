@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'react-toastify'
 import Box from '@mui/material/Box'
 import Tooltip from '@mui/material/Tooltip'
 import Menu from '@mui/material/Menu'
@@ -57,7 +58,10 @@ function Column({ column }) {
 
   const addNewCard = () => {
     const title = newCardTitle.trim()
-    if (!title) return
+    if (!title) {
+      toast.error('Please enter Card Title!', { position: 'bottom-right' })
+      return
+    }
     //Goi APi
     toggleOpenNewCardForm()
     setNewCardTitle('')
@@ -195,6 +199,7 @@ function Column({ column }) {
                 type='text'
                 size='small'
                 variant='outlined'
+                data-no-dnd='true'
                 autoFocus
                 value={newCardTitle}
                 onChange={(e) => setNewCardTitle(e.target.value)}
@@ -226,6 +231,7 @@ function Column({ column }) {
               />
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Button
+                  data-no-dnd='true'
                   type='button'
                   onClick={addNewCard}
                   variant='contained'

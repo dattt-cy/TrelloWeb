@@ -6,8 +6,6 @@ import {
   DndContext,
   useSensor,
   useSensors,
-  MouseSensor,
-  TouchSensor,
   DragOverlay,
   defaultDropAnimationSideEffects,
   closestCorners,
@@ -15,6 +13,7 @@ import {
   rectIntersection,
   getFirstCollision
 } from '@dnd-kit/core'
+import { MouseSensor, TouchSensor } from '~/customLibraries/DndKitSensors'
 import { arrayMove } from '@dnd-kit/sortable'
 import { useEffect, useState, useCallback } from 'react'
 import Column from './ListColumns/Column/Column'
@@ -122,7 +121,9 @@ function BoardContent({ board }) {
           columnId: nextOverColumn._id
         })
         //Xoa cai PlaceholderCard di neu no dang ton tai
-        nextOverColumn.cards = nextOverColumn.cards.filter(card => !card.FE_PlaceholderCard)
+        nextOverColumn.cards = nextOverColumn.cards.filter(
+          (card) => !card.FE_PlaceholderCard
+        )
 
         // Cap nhat lai mang cardOrderIs cho chuan du lieu
         nextOverColumn.cardOrderIds = nextActiveColumn.cards.map(
